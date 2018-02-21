@@ -75,12 +75,18 @@ function out= PSO(problem, params)
 F(MaxIt) = struct('cdata',[],'colormap',[]);
 xlim=[-1,1]; %[m] 
 ylim=[-1,1]; %[m]
+zlim=[-0.5,1];
 
+% 3-D plotting? TBD
+x = -1:20:1;
+y = -1:20:1;
+z = -1:20:1;
+% [X,Y,Z] = meshgrid(x,y,z);
+
+% 2-D plotting
 [X,Y] = meshgrid(linspace(-1,1));
-%Z = (X.*Y);
 Z = -4*sin(2*pi*X).*cos(1.5*pi*Y).*(1-X^2).*Y.*(1-Y);
-% contour(X,Y,Z)T
-%hold on
+
 
     for it=1:MaxIt
         for i=1:nPop
@@ -129,18 +135,20 @@ Z = -4*sin(2*pi*X).*cos(1.5*pi*Y).*(1-X^2).*Y.*(1-Y);
         % Plot particles
         xData = [];
         yData = [];
+        zData = [];
         xvData = [];
         yvData = [];
         for k = 1:nPop
             xData = [xData; particle(k).Position(1)];
             yData = [yData; particle(k).Position(2)];
+            zData = [zData; particle(k).Position(3)];
             xvData = [xData; particle(k).Velocity(1)];
             yvData = [yData; particle(k).Velocity(2)];
         end
-        fplot=plot(xData,yData,'o');
+        fplot = scatter3(xData,yData,zData,'o');
         hold on
         contour(X,Y,Z)
-        axis([xlim ylim])
+        axis([xlim ylim zlim])
         hold off
         %make movie
         F(it) = getframe;
@@ -162,7 +170,7 @@ Z = -4*sin(2*pi*X).*cos(1.5*pi*Y).*(1-X^2).*Y.*(1-Y);
     out.BestSol=GlobalBest;
     out.BestCosts=BestCosts;
     
-v = VideoWriter('PSOQuadr.avi','Motion JPEG AVI');
+v = VideoWriter('PSO3D.avi','Motion JPEG AVI');
 open(v)
 writeVideo(v,F)
 close(v)
