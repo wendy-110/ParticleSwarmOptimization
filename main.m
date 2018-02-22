@@ -27,6 +27,7 @@ params.c2=chi*phi2;             % Social Acceleration Coefficient
 params.ShowIterInfo=true;       % Flag for Showing Iteration Information
 
 params.nTarg = 3;
+params.detectionDist = 0.02;
 
 %% Calling PSO
 

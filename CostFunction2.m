@@ -1,7 +1,5 @@
 function J = CostFunction2(Position,targets)
 
-% z=-4*sin(2*pi*x(1))*cos(1.5*pi*x(2))*(1-x(1)^2)*x(2)*(1-x(2));
-
 % TEMPORARY TO TEST FUNCTION
 % Position = particle(1).Position;
 
@@ -10,17 +8,27 @@ J = 0;
 
 % Find closest target, and calculate cost based on distance
 nTarg = size(targets,1);
-delBest = Inf;
-del = 0;
+cost = 0;
+dist = 0;
+distBest = Inf;
+staticCost = 10;
+
 for i = 1:nTarg
-    del = norm(Position-targets(i).Position,2);
-    if del < delBest
-        delBest = del;
+    if targets(i).Found == 0
+        cost = cost + staticCost;
     end
+
+    % Find next closest target
+    dist = norm(Position-targets(i).Position,2);
+    if dist < distBest && targets(i).Found == 0
+        distBest = dist;
+        cost = cost + distBest;
+    end
+    
 end
 
-% Return delBest
-J = delBest;
+% Return total cost
+J = cost;
 
 end
 

@@ -21,6 +21,7 @@ function out= PSO(problem, params)
     wdamp=params.wdamp;             % Damping Ratio of Inertia Weight
     c1=params.c1;                   % Personal Acceleration Coefficient
     c2=params.c2;                   % Social Acceleration Coefficient
+    detectionDist = params.detectionDist; % Value for target radius
     
     % The Flag for Showing Iteration Information
     ShowIterInfo=params.ShowIterInfo;   
@@ -40,6 +41,7 @@ function out= PSO(problem, params)
     % Targets template
     nTarg = params.nTarg;
     empty_targ.Position = [];
+    empty_targ.Found = 0;
     targets = repmat(empty_targ,nTarg,1);
     
     % Create Population Array
@@ -47,8 +49,8 @@ function out= PSO(problem, params)
     
     % Initialize targets position
     for i = 1:nTarg
-%         targets(i).Position = unifrnd(VarMin,VarMax,VarSize);
-        targets(i).Position = unifrnd(-1,-0.75,VarSize);
+        targets(i).Position = unifrnd(VarMin,VarMax,VarSize);
+%         targets(i).Position = unifrnd(-1,-0.75,VarSize);
     end
     
     % Initialize Global Best
@@ -112,6 +114,23 @@ Z = -4*sin(2*pi*X).*cos(1.5*pi*Y).*(1-X^2).*Y.*(1-Y);
             
             % Evaluation
             particle(i).Cost=CostFunction(particle(i).Position,targets);
+            
+            % Update Target Found
+            % Find closest target 
+            delBest = Inf;
+            del = 0;
+            targBest = 0;
+            for k = 1:nTarg
+                del = norm(particle(i).Position-targets(k).Position,2);
+                if del < delBest
+                    delBest = del;
+                    targBest = k;
+                end
+            end
+            if norm(particle(i).Position - targets(targBest).Position,2) < detectionDist
+                targets(targBest).Found = 1;
+%                 GlobalBest.Cost=inf; %Resets simulation
+            end
 
             % Update Personal Best
             if particle(i).Cost< particle(i).Best.Cost
@@ -154,12 +173,31 @@ Z = -4*sin(2*pi*X).*cos(1.5*pi*Y).*(1-X^2).*Y.*(1-Y);
         fplot = scatter3(xData,yData,zData,'o','b');
         hold on
         
-        %Plot targets
-        scatter3(targets.Position,'x','r')
-        hold on
-        
-        %Plot cost contour
-%         contour(X,Y,Z)
+        %Plot found and unfound targets
+        foundCount = 1; %for indexing purposes
+        unfoundCount = 1;
+        targetsFound = [];
+        targetsUnfound = [];
+        for k = 1:nTarg
+            if targets(k).Found == 1
+%                 targetsFound(foundCount).Position = targets(k).Position;
+                targetsFound(foundCount,:) = targets(k).Position;
+                foundCount = foundCount + 1;
+            else
+%                 targetsUnfound(unfoundCount).Position = targets(k).Position;
+                targetsUnfound(unfoundCount,:) = targets(k).Position;
+                unfoundCount = unfoundCount + 1;
+            end
+        end
+        if isempty(targetsFound) ~= 1
+            scatter3(targetsFound(:,1),targetsFound(:,2),targetsFound(:,3),'x','b')
+            hold on
+        end
+        if isempty(targetsUnfound) ~= 1
+            scatter3(targetsUnfound(:,1),targetsUnfound(:,2),targetsUnfound(:,3),'x','r')
+            hold on
+        end
+             
         axis([xlim ylim zlim])
         hold off
         
@@ -184,6 +222,7 @@ Z = -4*sin(2*pi*X).*cos(1.5*pi*Y).*(1-X^2).*Y.*(1-Y);
     out.BestCosts=BestCosts;
     
 v = VideoWriter('PSO3D.avi','Motion JPEG AVI');
+v.FrameRate = 10;
 open(v)
 writeVideo(v,F)
 close(v)
