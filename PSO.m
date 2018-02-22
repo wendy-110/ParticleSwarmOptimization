@@ -36,10 +36,21 @@ function out= PSO(problem, params)
     empty_particle.Cost=[];
     empty_particle.Best.Position=[];
     empty_particle.Best.Cost=[];
-
+    
+    % Targets template
+    nTarg = params.nTarg;
+    empty_targ.Position = [];
+    targets = repmat(empty_targ,nTarg,1);
+    
     % Create Population Array
     particle=repmat(empty_particle,nPop,1);
-
+    
+    % Initialize targets position
+    for i = 1:nTarg
+%         targets(i).Position = unifrnd(VarMin,VarMax,VarSize);
+        targets(i).Position = unifrnd(-1,-0.75,VarSize);
+    end
+    
     % Initialize Global Best
     GlobalBest.Cost=inf;
 
@@ -52,7 +63,7 @@ function out= PSO(problem, params)
         particle(i).Velocity=zeros(VarSize);
 
         % Evaluation
-        particle(i).Cost=CostFunction(particle(i).Position);
+        particle(i).Cost=CostFunction(particle(i).Position,targets);
 
         % Update the Personal Best
         particle(i).Best.Position=particle(i).Position;
@@ -75,18 +86,11 @@ function out= PSO(problem, params)
 F(MaxIt) = struct('cdata',[],'colormap',[]);
 xlim=[-1,1]; %[m] 
 ylim=[-1,1]; %[m]
-zlim=[-0.5,1];
-
-% 3-D plotting? TBD
-x = -1:20:1;
-y = -1:20:1;
-z = -1:20:1;
-% [X,Y,Z] = meshgrid(x,y,z);
+zlim=[-1,1];
 
 % 2-D plotting
 [X,Y] = meshgrid(linspace(-1,1));
 Z = -4*sin(2*pi*X).*cos(1.5*pi*Y).*(1-X^2).*Y.*(1-Y);
-
 
     for it=1:MaxIt
         for i=1:nPop
@@ -107,7 +111,7 @@ Z = -4*sin(2*pi*X).*cos(1.5*pi*Y).*(1-X^2).*Y.*(1-Y);
             particle(i).position=min(particle(i).Position, VarMax);
             
             % Evaluation
-            particle(i).Cost=CostFunction(particle(i).Position);
+            particle(i).Cost=CostFunction(particle(i).Position,targets);
 
             % Update Personal Best
             if particle(i).Cost< particle(i).Best.Cost
@@ -132,32 +136,41 @@ Z = -4*sin(2*pi*X).*cos(1.5*pi*Y).*(1-X^2).*Y.*(1-Y);
             disp(['Iteration ' num2str(it) ': Best Cost = ' num2str(BestCosts(it))]);
         end
         
-        % Plot particles
+        % Arrange particle, target information into arrays
         xData = [];
         yData = [];
         zData = [];
-        xvData = [];
-        yvData = [];
+%         xvData = [];
+%         yvData = [];
         for k = 1:nPop
             xData = [xData; particle(k).Position(1)];
             yData = [yData; particle(k).Position(2)];
             zData = [zData; particle(k).Position(3)];
-            xvData = [xData; particle(k).Velocity(1)];
-            yvData = [yData; particle(k).Velocity(2)];
+%             xvData = [xData; particle(k).Velocity(1)];
+%             yvData = [yData; particle(k).Velocity(2)];
         end
-        fplot = scatter3(xData,yData,zData,'o');
+        
+        %Plot the swarm particles
+        fplot = scatter3(xData,yData,zData,'o','b');
         hold on
-        contour(X,Y,Z)
+        
+        %Plot targets
+        scatter3(targets.Position,'x','r')
+        hold on
+        
+        %Plot cost contour
+%         contour(X,Y,Z)
         axis([xlim ylim zlim])
         hold off
+        
         %make movie
         F(it) = getframe;
         
         % Update Movement history
         history(:,1,it) = xData;
         history(:,2,it) = yData;
-        history(:,3,it) = xvData(2:end);
-        history(:,4,it) = xvData(2:end);
+%         history(:,3,it) = xvData(2:end);
+%         history(:,4,it) = xvData(2:end);
         
         % Damping Inertia Coefficient
         w=w*wdamp;

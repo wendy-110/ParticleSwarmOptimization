@@ -4,8 +4,8 @@ close all;
 
 %% Problem Definition
 
-problem.CostFunction=@(x) ff(x);    % Cost Function
-problem.nVar=2;                        % Number of Unknowns (Decision) Variables
+problem.CostFunction=@(x,y) CostFunction2(x,y);    % Cost Function
+problem.nVar=3;                        % Number of Unknowns (Decision) Variables
 problem.VarMin=-1;                     % Lower Bound of Decision Variables
 problem.VarMax=1;                      % Upper Bound of Decision Variables
 
@@ -25,6 +25,8 @@ params.wdamp=1;                 % Damping Ratio of Inertia Weight
 params.c1=chi*phi1;             % Personal Acceleration Coefficient
 params.c2=chi*phi2;             % Social Acceleration Coefficient
 params.ShowIterInfo=true;       % Flag for Showing Iteration Information
+
+params.nTarg = 3;
 
 %% Calling PSO
 
