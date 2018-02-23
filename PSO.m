@@ -71,23 +71,19 @@ function out= PSO(problem, params)
     % Array to hold history of position and velocities over time
     history = zeros(nPop,2*nVar,MaxIt);
 
-    %% Main Loop of PSO
+%% Main Loop of PSO
+
+% Set up video and axis limits
 F(MaxIt) = struct('cdata',[],'colormap',[]);
 xlim=[-1,1]; %[m] 
 ylim=[-1,1]; %[m]
 zlim=[-0.5,1];
 
-% 3-D plotting? TBD
-x = -1:20:1;
-y = -1:20:1;
-z = -1:20:1;
-% [X,Y,Z] = meshgrid(x,y,z);
-
 % 2-D plotting
 [X,Y] = meshgrid(linspace(-1,1));
 Z = -4*sin(2*pi*X).*cos(1.5*pi*Y).*(1-X^2).*Y.*(1-Y);
 
-
+% Main PSO Loop
     for it=1:MaxIt
         for i=1:nPop
             % Update Velocity
@@ -150,6 +146,7 @@ Z = -4*sin(2*pi*X).*cos(1.5*pi*Y).*(1-X^2).*Y.*(1-Y);
         contour(X,Y,Z)
         axis([xlim ylim zlim])
         hold off
+        
         %make movie
         F(it) = getframe;
         
@@ -171,6 +168,7 @@ Z = -4*sin(2*pi*X).*cos(1.5*pi*Y).*(1-X^2).*Y.*(1-Y);
     out.BestCosts=BestCosts;
     
 v = VideoWriter('PSO3D.avi','Motion JPEG AVI');
+v.FrameRate = 10;
 open(v)
 writeVideo(v,F)
 close(v)

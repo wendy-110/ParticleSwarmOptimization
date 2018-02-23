@@ -5,7 +5,7 @@ close all;
 %% Problem Definition
 
 problem.CostFunction=@(x) ff(x);    % Cost Function
-problem.nVar=2;                        % Number of Unknowns (Decision) Variables
+problem.nVar=3;                        % Number of Unknowns (Decision) Variables
 problem.VarMin=-1;                     % Lower Bound of Decision Variables
 problem.VarMax=1;                      % Upper Bound of Decision Variables
 
