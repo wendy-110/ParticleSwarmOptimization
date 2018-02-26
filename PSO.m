@@ -84,16 +84,15 @@ function out= PSO(problem, params)
     % Array to hold history of position and velocities over time
     history = zeros(nPop,2*nVar,MaxIt);
 
-    %% Main Loop of PSO
+%% Main Loop of PSO
+
+% Video settings initialization
 F(MaxIt) = struct('cdata',[],'colormap',[]);
 xlim=[-1,1]; %[m] 
 ylim=[-1,1]; %[m]
 zlim=[-1,1];
 
-% 2-D plotting
-[X,Y] = meshgrid(linspace(-1,1));
-Z = -4*sin(2*pi*X).*cos(1.5*pi*Y).*(1-X^2).*Y.*(1-Y);
-
+% Main PSO Loop
     for it=1:MaxIt
         for i=1:nPop
             % Update Velocity
@@ -122,11 +121,12 @@ Z = -4*sin(2*pi*X).*cos(1.5*pi*Y).*(1-X^2).*Y.*(1-Y);
             targBest = 0;
             for k = 1:nTarg
                 del = norm(particle(i).Position-targets(k).Position,2);
-                if del < delBest
+                if del < delBest && targets(k).Found == 0
                     delBest = del;
                     targBest = k;
                 end
             end
+%             if targets.Found == 0
             if norm(particle(i).Position - targets(targBest).Position,2) < detectionDist
                 targets(targBest).Found = 1;
 %                 GlobalBest.Cost=inf; %Resets simulation
@@ -180,11 +180,9 @@ Z = -4*sin(2*pi*X).*cos(1.5*pi*Y).*(1-X^2).*Y.*(1-Y);
         targetsUnfound = [];
         for k = 1:nTarg
             if targets(k).Found == 1
-%                 targetsFound(foundCount).Position = targets(k).Position;
                 targetsFound(foundCount,:) = targets(k).Position;
                 foundCount = foundCount + 1;
             else
-%                 targetsUnfound(unfoundCount).Position = targets(k).Position;
                 targetsUnfound(unfoundCount,:) = targets(k).Position;
                 unfoundCount = unfoundCount + 1;
             end

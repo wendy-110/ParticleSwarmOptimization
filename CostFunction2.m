@@ -12,6 +12,7 @@ cost = 0;
 dist = 0;
 distBest = Inf;
 staticCost = 10;
+distanceFactor = 1;
 
 for i = 1:nTarg
     if targets(i).Found == 0
@@ -21,7 +22,7 @@ for i = 1:nTarg
     % Find next closest target
     dist = norm(Position-targets(i).Position,2);
     if dist < distBest && targets(i).Found == 0
-        distBest = dist;
+        distBest = distanceFactor*dist;
         cost = cost + distBest;
     end
     
