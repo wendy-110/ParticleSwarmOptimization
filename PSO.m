@@ -26,7 +26,7 @@ function out= PSO(problem, params)
     % The Flag for Showing Iteration Information
     ShowIterInfo=params.ShowIterInfo;   
     
-    MaxVelocity=0.02*(VarMax-VarMin);
+    MaxVelocity=0.03*(VarMax-VarMin);
     MinVelocity=-MaxVelocity;
     
     %% Initialization
@@ -88,9 +88,9 @@ function out= PSO(problem, params)
 
 % Video settings initialization
 F(MaxIt) = struct('cdata',[],'colormap',[]);
-xlim=[-1,1]; %[m] 
-ylim=[-1,1]; %[m]
-zlim=[-1,1];
+xlim=[-1.5,1.5]; %[m] 
+ylim=[-1.5,1.5]; %[m]
+zlim=[-1.5,1.5];
 
 % Main PSO Loop
     for it=1:MaxIt
@@ -99,7 +99,9 @@ zlim=[-1,1];
             particle(i).Velocity=w*particle(i).Velocity...
                 +c1*rand(VarSize).*(particle(i).Best.Position-particle(i).Position)...
                 +c2*rand(VarSize).*(GlobalBest.Position-particle(i).Position);
-
+%             particle(i).Velocity=w*particle(i).Velocity...
+%                 +c1*rand(VarSize).*(particle(i).Best.Position-particle(i).Position);
+%             
             % Apply Velocity Limits
             particle(i).Velocity=max(particle(i).Velocity, MinVelocity);
             particle(i).Velocity=min(particle(i).Velocity, MaxVelocity);
@@ -108,28 +110,19 @@ zlim=[-1,1];
             particle(i).Position=particle(i).Position+particle(i).Velocity;
 
             % Apply Lower and Upper Bound Limits
-            particle(i).position=max(particle(i).Position, VarMin);
-            particle(i).position=min(particle(i).Position, VarMax);
+            particle(i).Position=max(particle(i).Position, VarMin);
+            particle(i).Position=min(particle(i).Position, VarMax);
             
             % Evaluation
             particle(i).Cost=CostFunction(particle(i).Position,targets);
             
             % Update Target Found
-            % Find closest target 
-            delBest = Inf;
-            del = 0;
-            targBest = 0;
             for k = 1:nTarg
-                del = norm(particle(i).Position-targets(k).Position,2);
-                if del < delBest && targets(k).Found == 0
-                    delBest = del;
-                    targBest = k;
+                if norm(particle(i).Position - targets(k).Position,2) < detectionDist
+                    targets(k).Found = 1;
+                    fprintf('found target num %f\n',k);
+                    GlobalBest.Cost=Inf; %Resets simulation
                 end
-            end
-%             if targets.Found == 0
-            if norm(particle(i).Position - targets(targBest).Position,2) < detectionDist
-                targets(targBest).Found = 1;
-%                 GlobalBest.Cost=inf; %Resets simulation
             end
 
             % Update Personal Best
@@ -159,14 +152,16 @@ zlim=[-1,1];
         xData = [];
         yData = [];
         zData = [];
-%         xvData = [];
-%         yvData = [];
+        xvData = [];
+        yvData = [];
+        zvData = [];
         for k = 1:nPop
             xData = [xData; particle(k).Position(1)];
             yData = [yData; particle(k).Position(2)];
             zData = [zData; particle(k).Position(3)];
-%             xvData = [xData; particle(k).Velocity(1)];
-%             yvData = [yData; particle(k).Velocity(2)];
+            xvData = [xvData; particle(k).Velocity(1)];
+            yvData = [yvData; particle(k).Velocity(2)];
+            zvData = [zvData; particle(k).Velocity(3)];
         end
         
         %Plot the swarm particles
@@ -205,8 +200,10 @@ zlim=[-1,1];
         % Update Movement history
         history(:,1,it) = xData;
         history(:,2,it) = yData;
-%         history(:,3,it) = xvData(2:end);
-%         history(:,4,it) = xvData(2:end);
+        history(:,3,it) = zData;
+        history(:,4,it) = xvData;
+        history(:,5,it) = yvData;
+        history(:,6,it) = zvData;
         
         % Damping Inertia Coefficient
         w=w*wdamp;

@@ -13,14 +13,14 @@ problem.VarMax=1;                      % Upper Bound of Decision Variables
 
 % Constriction Coefficients
 kappa=1;
-phi1=0.5;
-phi2=1.0;
+phi1=3;
+phi2=0.5;
 phi=phi1+phi2;
 chi=2*kappa/abs(2-phi-sqrt(phi^2-4*phi));
 
 params.MaxIt=100;              % Maximum Number of Iterations
-params.nPop=2;                 % Population Size (Swarm Size)
-params.w=chi;                   % Inertia Coefficient
+params.nPop=10;                 % Population Size (Swarm Size)
+params.w=chi*2;                   % Inertia Coefficient
 params.wdamp=1;                 % Damping Ratio of Inertia Weight
 params.c1=chi*phi1;             % Personal Acceleration Coefficient
 params.c2=chi*phi2;             % Social Acceleration Coefficient
