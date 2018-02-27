@@ -18,7 +18,7 @@ phi2=0.5;
 phi=phi1+phi2;
 chi=2*kappa/abs(2-phi-sqrt(phi^2-4*phi));
 
-params.MaxIt=100;              % Maximum Number of Iterations
+params.MaxIt=200;              % Maximum Number of Iterations
 params.nPop=10;                 % Population Size (Swarm Size)
 params.w=chi*2;                   % Inertia Coefficient
 params.wdamp=1;                 % Damping Ratio of Inertia Weight
@@ -26,7 +26,7 @@ params.c1=chi*phi1;             % Personal Acceleration Coefficient
 params.c2=chi*phi2;             % Social Acceleration Coefficient
 params.ShowIterInfo=true;       % Flag for Showing Iteration Information
 
-params.nTarg = 5;
+params.nTarg = 20;
 params.detectionDist = 0.2;
 
 %% Calling PSO
