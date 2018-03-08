@@ -37,6 +37,7 @@ function out= PSO(problem, params)
     empty_particle.Cost=[];
     empty_particle.Best.Position=[];
     empty_particle.Best.Cost=[];
+    particle=repmat(empty_particle,nPop,1);
     
     % Targets template
     nTarg = params.nTarg;
@@ -44,13 +45,22 @@ function out= PSO(problem, params)
     empty_targ.Found = 0;
     targets = repmat(empty_targ,nTarg,1);
     
-    % Create Population Array
-    particle=repmat(empty_particle,nPop,1);
+    % Obstacles template
+    nObs = params.nObs;
+    empty_obs.Position = [];
+    empty_obs.obsRadius = params.obsRadius;
+    obstacles = repmat(empty_obs,nObs,1);
+    
     
     % Initialize targets position
     for i = 1:nTarg
         targets(i).Position = unifrnd(VarMin,VarMax,VarSize);
 %         targets(i).Position = unifrnd(-1,-0.75,VarSize);
+    end
+    
+    % Initialize obstacles position
+    for i = 1:nObs
+        obstacles(i).Position = unifrnd(-1,0.75,VarSize);
     end
     
     % Initialize Global Best
@@ -65,7 +75,7 @@ function out= PSO(problem, params)
         particle(i).Velocity=zeros(VarSize);
 
         % Evaluation
-        particle(i).Cost=CostFunction(particle(i).Position,targets);
+        particle(i).Cost=CostFunction(particle(i).Position,targets,obstacles);
 
         % Update the Personal Best
         particle(i).Best.Position=particle(i).Position;
@@ -112,13 +122,13 @@ zlim=[-1.5,1.5];
             particle(i).Position=min(particle(i).Position, VarMax);
             
             % Evaluation
-            particle(i).Cost=CostFunction(particle(i).Position,targets);
+            particle(i).Cost=CostFunction(particle(i).Position,targets,obstacles);
             
             % Update Target Found
             for k = 1:nTarg
                 if norm(particle(i).Position - targets(k).Position,2) < detectionDist
                     targets(k).Found = 1;
-                    fprintf('found target num %f\n',k);
+%                     fprintf('found target num %f\n',k);
                     GlobalBest.Cost=Inf; %Resets simulation
                 end
             end
@@ -149,21 +159,22 @@ zlim=[-1.5,1.5];
         % Arrange particle, target information into arrays
         xData = [];
         yData = [];
-        zData = [];
-        xvData = [];
-        yvData = [];
-        zvData = [];
+%         zData = [];
+%         xvData = [];
+%         yvData = [];
+%         zvData = [];
         for k = 1:nPop
             xData = [xData; particle(k).Position(1)];
             yData = [yData; particle(k).Position(2)];
-            zData = [zData; particle(k).Position(3)];
-            xvData = [xvData; particle(k).Velocity(1)];
-            yvData = [yvData; particle(k).Velocity(2)];
-            zvData = [zvData; particle(k).Velocity(3)];
+%             zData = [zData; particle(k).Position(3)];
+%             xvData = [xvData; particle(k).Velocity(1)];
+%             yvData = [yvData; particle(k).Velocity(2)];
+%             zvData = [zvData; particle(k).Velocity(3)];
         end
         
         %Plot the swarm particles
-        fplot = scatter3(xData,yData,zData,'o','b');
+%         fplot = scatter3(xData,yData,zData,'o','b');
+        scatter(xData,yData,'o','b')
         hold on
         
         %Plot found and unfound targets
@@ -181,27 +192,39 @@ zlim=[-1.5,1.5];
             end
         end
         if isempty(targetsFound) ~= 1
-            scatter3(targetsFound(:,1),targetsFound(:,2),targetsFound(:,3),'x','b')
+%             scatter3(targetsFound(:,1),targetsFound(:,2),targetsFound(:,3),'x','b')
+            scatter(targetsFound(:,1),targetsFound(:,2),'x','b')
             hold on
         end
         if isempty(targetsUnfound) ~= 1
-            scatter3(targetsUnfound(:,1),targetsUnfound(:,2),targetsUnfound(:,3),'x','r')
+%             scatter3(targetsUnfound(:,1),targetsUnfound(:,2),targetsUnfound(:,3),'x','r')
+            scatter(targetsUnfound(:,1),targetsUnfound(:,2),'x','r')            
             hold on
         end
-             
-        axis([xlim ylim zlim])
+
+        % Plot obstacles
+        obsTemp = [];
+        for k = 1:nObs
+            obsTemp(k,:) = obstacles(k).Position;
+        end
+        scatter(obsTemp(:,1),obsTemp(:,2),'s','r','filled')
+        hold on
+        
+        % Adjust axes
+%         axis([xlim ylim zlim])
+        axis([xlim ylim])
         hold off
         
         %make movie
         F(it) = getframe;
         
         % Update Movement history
-        history(:,1,it) = xData;
-        history(:,2,it) = yData;
-        history(:,3,it) = zData;
-        history(:,4,it) = xvData;
-        history(:,5,it) = yvData;
-        history(:,6,it) = zvData;
+%         history(:,1,it) = xData;
+%         history(:,2,it) = yData;
+%         history(:,3,it) = zData;
+%         history(:,4,it) = xvData;
+%         history(:,5,it) = yvData;
+%         history(:,6,it) = zvData;
         
         % Damping Inertia Coefficient
         w=w*wdamp;
@@ -214,7 +237,7 @@ zlim=[-1.5,1.5];
     out.BestSol=GlobalBest;
     out.BestCosts=BestCosts;
     
-v = VideoWriter('PSO3D.avi','Motion JPEG AVI');
+v = VideoWriter('PSOobst.avi','Motion JPEG AVI');
 v.FrameRate = 10;
 open(v)
 writeVideo(v,F)
