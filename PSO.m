@@ -3,7 +3,7 @@ function out= PSO(problem, params)
     %% Problem Definition
 
     CostFunction=problem.CostFunction;     % Cost Function
-
+    AttractionFunction=problem.AttractionFunction;
     nVar=problem.nVar;              % Number of Unknowns (Decision) Variables
 
     VarSize=[1 nVar];               % Matrix Size of Decision Variables
@@ -31,12 +31,17 @@ function out= PSO(problem, params)
     
     %% Initialization
 
+    % deltaT
+    dt = 0.2; %[s]
+    
     % The Particle Template
     empty_particle.Position=[];
     empty_particle.Velocity=[];
     empty_particle.Cost=[];
     empty_particle.Best.Position=[];
     empty_particle.Best.Cost=[];
+    empty_particle.BatteryLife = [];
+    empty_particle.Attraction = [];
     particle=repmat(empty_particle,nPop,1);
     
     % Targets template
@@ -60,7 +65,7 @@ function out= PSO(problem, params)
     
     % Initialize obstacles position
     for i = 1:nObs
-        obstacles(i).Position = unifrnd(-1,0.75,VarSize);
+        obstacles(i).Position = unifrnd(-0.5,0.5,VarSize);
     end
     
     % Initialize Global Best
@@ -69,7 +74,7 @@ function out= PSO(problem, params)
     % Initialize Population Members
     for i=1:nPop
         % Generate Random Solution
-        particle(i).Position=unifrnd(VarMin,VarMax,VarSize);
+        particle(i).Position=unifrnd(-1,-.70,VarSize);
 
         % Initialize Velocity
         particle(i).Velocity=zeros(VarSize);
@@ -105,14 +110,22 @@ zlim=[-1.5,1.5];
 % Main PSO Loop
     for it=1:MaxIt
         for i=1:nPop
-            % Update Velocity
-            particle(i).Velocity=w*particle(i).Velocity...
-                +c1*rand(VarSize).*(particle(i).Best.Position-particle(i).Position)...
-                +c2*rand(VarSize).*(GlobalBest.Position-particle(i).Position);
+            % Get attraction vector
+            particle(i).Attraction = AttractionFunction(particle(i).Position,particle,targets,obstacles,params);
+            
+            % Update Velocity, Euler approximation
+            % Normalize Velocity
+%             particle(i).Velocity = w*particle(i).Velocity + 0.06*(particle(i).Attraction/norm(particle(i).Attraction,2));
+
+% particle(i).Velocity=w*particle(i).Velocity...
+%                 +c1*rand(VarSize).*(particle(i).Best.Position-particle(i).Position)...
+%                 +c2*rand(VarSize).*(GlobalBest.Position-particle(i).Position);
              
-            % Apply Velocity Limits
-            particle(i).Velocity=max(particle(i).Velocity, MinVelocity);
-            particle(i).Velocity=min(particle(i).Velocity, MaxVelocity);
+            % Update Velocity and Apply Velocity Limits
+%             particle(i).Velocity=max(particle(i).Velocity, MinVelocity);
+%             particle(i).Velocity=min(particle(i).Velocity, MaxVelocity);
+            normalizedVel = (w*particle(i).Velocity + particle(i).Attraction)/norm((w*particle(i).Velocity + particle(i).Attraction),2);
+            particle(i).Velocity = MaxVelocity*normalizedVel;
             
             % Update Position
             particle(i).Position=particle(i).Position+particle(i).Velocity;
@@ -123,7 +136,7 @@ zlim=[-1.5,1.5];
             
             % Evaluation
             particle(i).Cost=CostFunction(particle(i).Position,targets,obstacles);
-            
+                        
             % Update Target Found
             for k = 1:nTarg
                 if norm(particle(i).Position - targets(k).Position,2) < detectionDist
@@ -172,10 +185,17 @@ zlim=[-1.5,1.5];
 %             zvData = [zvData; particle(k).Velocity(3)];
         end
         
-        %Plot the swarm particles
+        %Plot the swarm particles + circle of radius particleRadius
 %         fplot = scatter3(xData,yData,zData,'o','b');
         scatter(xData,yData,'o','b')
         hold on
+%         for k = 1:nPop
+%             th = 0:2*pi/20:2*pi;
+%             xunit = params.particleRadius * cos(th) + particle(k).Position(1);
+%             yunit = params.particleRadius * sin(th) + particle(k).Position(2);
+%             plot(xunit, yunit,'b');
+%             hold on
+%         end
         
         %Plot found and unfound targets
         foundCount = 1; %for indexing purposes
@@ -203,13 +223,15 @@ zlim=[-1.5,1.5];
         end
 
         % Plot obstacles
-        obsTemp = [];
-        for k = 1:nObs
-            obsTemp(k,:) = obstacles(k).Position;
+        if nObs >=1
+            obsTemp = [];
+            for k = 1:nObs
+                obsTemp(k,:) = obstacles(k).Position;
+            end
+             scatter(obsTemp(:,1),obsTemp(:,2),'s','r','filled')
+            hold on
         end
-        scatter(obsTemp(:,1),obsTemp(:,2),'s','r','filled')
-        hold on
-        
+       
         % Adjust axes
 %         axis([xlim ylim zlim])
         axis([xlim ylim])
@@ -237,7 +259,7 @@ zlim=[-1.5,1.5];
     out.BestSol=GlobalBest;
     out.BestCosts=BestCosts;
     
-v = VideoWriter('PSOobst.avi','Motion JPEG AVI');
+v = VideoWriter('PSO_attraction_method.avi','Motion JPEG AVI');
 v.FrameRate = 10;
 open(v)
 writeVideo(v,F)
