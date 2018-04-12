@@ -14,7 +14,7 @@ costTarg = 0;
 costObs = 0;
 dist = 0;
 distBest = Inf;
-staticTargCost = 10;
+staticTargCost = 15;
 closestFactor = 1;
 flag = 0;
 

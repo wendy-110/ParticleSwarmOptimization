@@ -59,13 +59,13 @@ function out= PSO(problem, params)
     
     % Initialize targets position
     for i = 1:nTarg
-        targets(i).Position = unifrnd(VarMin,VarMax,VarSize);
+        targets(i).Position = unifrnd(VarMin+1,VarMax-1,VarSize);
 %         targets(i).Position = unifrnd(-1,-0.75,VarSize);
     end
     
     % Initialize obstacles position
     for i = 1:nObs
-        obstacles(i).Position = unifrnd(-0.5,0.5,VarSize);
+        obstacles(i).Position = unifrnd(VarMin*0.6,VarMax*0.6,VarSize);
     end
     
     % Initialize Global Best
@@ -74,7 +74,8 @@ function out= PSO(problem, params)
     % Initialize Population Members
     for i=1:nPop
         % Generate Random Solution
-        particle(i).Position=unifrnd(-1,-.70,VarSize);
+%         particle(i).Position=unifrnd(-1,-.70,VarSize);
+        particle(i).Position=params.startingLocInfo_pop(i,:);
 
         % Initialize Velocity
         particle(i).Velocity=zeros(VarSize);
@@ -94,7 +95,7 @@ function out= PSO(problem, params)
     end
 
     % Array to Hold Best Cost Value on Each Iteration
-    BestCosts=zeros(MaxIt,1);
+    BestCosts=inf(MaxIt,1);
     
     % Array to hold history of position and velocities over time
     history = zeros(nPop,2*nVar,MaxIt);
@@ -103,12 +104,12 @@ function out= PSO(problem, params)
 
 % Video settings initialization
 F(MaxIt) = struct('cdata',[],'colormap',[]);
-xlim=[-1.5,1.5]; %[m] 
-ylim=[-1.5,1.5]; %[m]
-zlim=[-1.5,1.5];
+xlim=[problem.VarMin,problem.VarMax]; %[m] 
+ylim=[problem.VarMin-3,problem.VarMax]; %[m]
+% zlim=[-1.5,1.5];
 
 % Main PSO Loop
-    for it=1:MaxIt
+for it=1:MaxIt
         for i=1:nPop
             % Get attraction vector
             particle(i).Attraction = AttractionFunction(particle(i).Position,particle,targets,obstacles,params);
@@ -250,18 +251,25 @@ zlim=[-1.5,1.5];
         
         % Damping Inertia Coefficient
         w=w*wdamp;
-    end
+        
+        % If cost == 0, save the iteration num
+        if BestCosts(it) == 0
+            break;
+        end
+
+end
     
     %play movie
     movie(F,1,10)
     
+    out.endIt = it;
     out.pop=particle;
     out.BestSol=GlobalBest;
     out.BestCosts=BestCosts;
     
-v = VideoWriter('PSO_attraction_method.avi','Motion JPEG AVI');
-v.FrameRate = 10;
-open(v)
-writeVideo(v,F)
-close(v)
+% v = VideoWriter('PSO_attraction_method.avi','Motion JPEG AVI');
+% v.FrameRate = 10;
+% open(v)
+% writeVideo(v,F)
+% close(v)
 end

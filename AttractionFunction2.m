@@ -11,9 +11,11 @@ particleRad = params.particleRadius;
 obstacleRad = params.obsRadius;
 
 %For member-member interaction
-a_attr = 0.3;
+a_attr = 0.1;
+% a_attr = 0;
 b_attr = 1;
 a_repul = 50;
+% a_repul = 0;
 b_repul = -1; %must be negative
 F_mm = [0 0];
 for i = 1:nPart
@@ -32,7 +34,7 @@ end
 % F_mm
 
 %For member-target interaction
-a_targ = 10;
+a_targ = 30;
 b_targ = 1;
 F_mt = [0 0];
 lowestDist = Inf;
@@ -50,7 +52,7 @@ end
 % F_mt
 
 %For member-obstacle interaction
-a_obs = 100;
+a_obs = 150;
 b_obs = -1;% must be negative
 F_mo = [0 0];
 for i = 1:nObs
