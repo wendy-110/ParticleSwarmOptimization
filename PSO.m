@@ -27,6 +27,14 @@ function out= PSO(problem, params)
     MaxVelocity=0.05*(VarMax-VarMin);
     MinVelocity=-MaxVelocity;
     
+    %% Get Genetic Alg parameters
+    aa = params.GAString(1);
+    ba = params.GAString(2);
+    ar = params.GAString(3);
+    br = params.GAString(4);
+    at = params.GAString(5);
+    bt = params.GAString(6);
+    
     %% Initialization
 
     % deltaT
@@ -119,17 +127,15 @@ scatter(xData,yData,'o','b')
 % Main PSO Loop
 for it=1:MaxIt
         for i=1:nPop
-
             % Get attraction vector
-            particle(i).Attraction = AttractionFunction(particle(i).Position,particle,targets,obstacles,params);
-%             fprintf('w*Particle(i).Velocity is %f and particle(i).Attraction is %f\n',w*particle(i).Velocity,particle(i).Attraction);         
+            particle(i).Attraction = AttractionFunctionGA(aa,ba,ar,br,at,bt,particle(i).Position,particle,targets,obstacles,params);
             normalizedVel = (w*particle(i).Velocity + particle(i).Attraction)/norm((w*particle(i).Velocity + particle(i).Attraction),2);
             prevVel = particle(i).Velocity;
             particle(i).Velocity = MaxVelocity*normalizedVel;
             currentVel = particle(i).Velocity;
             
             % Energy, or "Fuel" Evaluation
-            workDone = abs((1/2)*(dot(currentVel,currentVel) - dot(prevVel,prevVel))) % Assumes mass is 1.
+            workDone = abs((1/2)*(dot(currentVel,currentVel) - dot(prevVel,prevVel))); % Assumes mass is 1.
             particle(i).Fuel = particle(i).Fuel - workDone;
             
             % Update Position if EnoughFuel
@@ -250,9 +256,9 @@ for it=1:MaxIt
         w=w*wdamp;
         
         % If cost == 0, save the iteration num
-%         if BestCosts(it) == 0
-%             break;
-%         end
+        if BestCosts(it) == 0
+            break;
+        end
 end
     
     %play movie
