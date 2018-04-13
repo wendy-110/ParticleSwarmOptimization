@@ -14,9 +14,7 @@ function out= PSO(problem, params)
     %% Parameters of PSO
 
     MaxIt=params.MaxIt;             % Maximum Number of Iterations
-
     nPop=params.nPop;               % Population Size (Swarm Size)
-
     w=params.w;                     % Inertia Coefficient
     wdamp=params.wdamp;             % Damping Ratio of Inertia Weight
     c1=params.c1;                   % Personal Acceleration Coefficient
@@ -26,7 +24,7 @@ function out= PSO(problem, params)
     % The Flag for Showing Iteration Information
     ShowIterInfo=params.ShowIterInfo;   
     
-    MaxVelocity=0.03*(VarMax-VarMin);
+    MaxVelocity=0.04*(VarMax-VarMin);
     MinVelocity=-MaxVelocity;
     
     %% Initialization
@@ -59,8 +57,9 @@ function out= PSO(problem, params)
     
     % Initialize targets position
     for i = 1:nTarg
-        targets(i).Position = unifrnd(VarMin+1,VarMax-1,VarSize);
+%         targets(i).Position = unifrnd(VarMin+1,VarMax-1,VarSize);
 %         targets(i).Position = unifrnd(-1,-0.75,VarSize);
+        targets(i).Position = params.startingLocInfo_targ(:,:,i);
     end
     
     % Initialize obstacles position
@@ -108,23 +107,20 @@ xlim=[problem.VarMin,problem.VarMax]; %[m]
 ylim=[problem.VarMin-3,problem.VarMax]; %[m]
 % zlim=[-1.5,1.5];
 
+% Plot starting config
+xData = [];
+yData = [];
+for k = 1:nPop
+    xData = [xData; particle(k).Position(1)];
+    yData = [yData; particle(k).Position(2)];
+end
+scatter(xData,yData,'o','b')
+
 % Main PSO Loop
 for it=1:MaxIt
         for i=1:nPop
             % Get attraction vector
             particle(i).Attraction = AttractionFunction(particle(i).Position,particle,targets,obstacles,params);
-            
-            % Update Velocity, Euler approximation
-            % Normalize Velocity
-%             particle(i).Velocity = w*particle(i).Velocity + 0.06*(particle(i).Attraction/norm(particle(i).Attraction,2));
-
-% particle(i).Velocity=w*particle(i).Velocity...
-%                 +c1*rand(VarSize).*(particle(i).Best.Position-particle(i).Position)...
-%                 +c2*rand(VarSize).*(GlobalBest.Position-particle(i).Position);
-             
-            % Update Velocity and Apply Velocity Limits
-%             particle(i).Velocity=max(particle(i).Velocity, MinVelocity);
-%             particle(i).Velocity=min(particle(i).Velocity, MaxVelocity);
             normalizedVel = (w*particle(i).Velocity + particle(i).Attraction)/norm((w*particle(i).Velocity + particle(i).Attraction),2);
             particle(i).Velocity = MaxVelocity*normalizedVel;
             
@@ -132,8 +128,8 @@ for it=1:MaxIt
             particle(i).Position=particle(i).Position+particle(i).Velocity;
 
             % Apply Lower and Upper Bound Limits
-            particle(i).Position=max(particle(i).Position, VarMin);
-            particle(i).Position=min(particle(i).Position, VarMax);
+%             particle(i).Position=max(particle(i).Position, VarMin);
+%             particle(i).Position=min(particle(i).Position, VarMax);
             
             % Evaluation
             particle(i).Cost=CostFunction(particle(i).Position,targets,obstacles);
@@ -142,24 +138,19 @@ for it=1:MaxIt
             for k = 1:nTarg
                 if norm(particle(i).Position - targets(k).Position,2) < detectionDist
                     targets(k).Found = 1;
-%                     fprintf('found target num %f\n',k);
                     GlobalBest.Cost=Inf; %Resets simulation
                 end
             end
 
             % Update Personal Best
             if particle(i).Cost< particle(i).Best.Cost
-
                 particle(i).Best.Position=particle(i).Position;
                 particle(i).Best.Cost=particle(i).Cost;
-
                 % Update Global Best
                 if particle(i).Best.Cost<GlobalBest.Cost
                     GlobalBest=particle(i).Best;
                 end
-
             end
-
         end
 
         % Store the Best Cost Value
@@ -173,23 +164,16 @@ for it=1:MaxIt
         % Arrange particle, target information into arrays
         xData = [];
         yData = [];
-%         zData = [];
-%         xvData = [];
-%         yvData = [];
-%         zvData = [];
         for k = 1:nPop
             xData = [xData; particle(k).Position(1)];
             yData = [yData; particle(k).Position(2)];
-%             zData = [zData; particle(k).Position(3)];
-%             xvData = [xvData; particle(k).Velocity(1)];
-%             yvData = [yvData; particle(k).Velocity(2)];
-%             zvData = [zvData; particle(k).Velocity(3)];
         end
         
         %Plot the swarm particles + circle of radius particleRadius
 %         fplot = scatter3(xData,yData,zData,'o','b');
         scatter(xData,yData,'o','b')
         hold on
+        % Plot Detection Radius of Particles
 %         for k = 1:nPop
 %             th = 0:2*pi/20:2*pi;
 %             xunit = params.particleRadius * cos(th) + particle(k).Position(1);
@@ -222,7 +206,12 @@ for it=1:MaxIt
             scatter(targetsUnfound(:,1),targetsUnfound(:,2),'x','r')            
             hold on
         end
-
+        % Plot Target Boundary Area
+        line([problem.VarMax,problem.VarMax],[problem.VarMin,problem.VarMax],'Color','k')
+        line([problem.VarMin,problem.VarMin],[problem.VarMin,problem.VarMax],'Color','k')
+        line([problem.VarMin,problem.VarMax],[problem.VarMin,problem.VarMin],'Color','k')
+        line([problem.VarMin,problem.VarMax],[problem.VarMax,problem.VarMax],'Color','k')
+        
         % Plot obstacles
         if nObs >=1
             obsTemp = [];
@@ -253,19 +242,19 @@ for it=1:MaxIt
         w=w*wdamp;
         
         % If cost == 0, save the iteration num
-        if BestCosts(it) == 0
-            break;
-        end
-
+%         if BestCosts(it) == 0
+%             break;
+%         end
 end
     
     %play movie
-    movie(F,1,10)
+%     movie(F,1,10)
     
     out.endIt = it;
     out.pop=particle;
     out.BestSol=GlobalBest;
     out.BestCosts=BestCosts;
+    out.F = F; % save video
     
 % v = VideoWriter('PSO_attraction_method.avi','Motion JPEG AVI');
 % v.FrameRate = 10;

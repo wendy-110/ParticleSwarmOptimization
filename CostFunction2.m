@@ -12,7 +12,6 @@ nTarg = size(targets,1);
 nObs = size(obstacles,1);
 costTarg = 0;
 costObs = 0;
-dist = 0;
 distBest = Inf;
 staticTargCost = 15;
 closestFactor = 1;

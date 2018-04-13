@@ -14,7 +14,7 @@ obstacleRad = params.obsRadius;
 a_attr = 0.1;
 % a_attr = 0;
 b_attr = 1;
-a_repul = 50;
+a_repul = 1;
 % a_repul = 0;
 b_repul = -1; %must be negative
 F_mm = [0 0];
@@ -31,10 +31,9 @@ for i = 1:nPart
         end
     end
 end
-% F_mm
 
 %For member-target interaction
-a_targ = 30;
+a_targ = 0.01;
 b_targ = 1;
 F_mt = [0 0];
 lowestDist = Inf;
@@ -49,10 +48,9 @@ for i = 1:nTarg
         F_mt = F_mt+(a_targ*lowestDist^b_targ)*lowestDir;
     end
 end
-% F_mt
 
 %For member-obstacle interaction
-a_obs = 150;
+a_obs = 30;
 b_obs = -1;% must be negative
 F_mo = [0 0];
 for i = 1:nObs
