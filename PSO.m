@@ -24,7 +24,7 @@ function out= PSO(problem, params)
     % The Flag for Showing Iteration Information
     ShowIterInfo=params.ShowIterInfo;   
     
-    MaxVelocity=0.04*(VarMax-VarMin);
+    MaxVelocity=0.05*(VarMax-VarMin);
     MinVelocity=-MaxVelocity;
     
     %% Initialization
@@ -38,7 +38,7 @@ function out= PSO(problem, params)
     empty_particle.Cost=[];
     empty_particle.Best.Position=[];
     empty_particle.Best.Cost=[];
-    empty_particle.BatteryLife = [];
+    empty_particle.Fuel = params.particleFuel;
     empty_particle.Attraction = [];
     particle=repmat(empty_particle,nPop,1);
     
@@ -119,20 +119,28 @@ scatter(xData,yData,'o','b')
 % Main PSO Loop
 for it=1:MaxIt
         for i=1:nPop
+
             % Get attraction vector
             particle(i).Attraction = AttractionFunction(particle(i).Position,particle,targets,obstacles,params);
+%             fprintf('w*Particle(i).Velocity is %f and particle(i).Attraction is %f\n',w*particle(i).Velocity,particle(i).Attraction);         
             normalizedVel = (w*particle(i).Velocity + particle(i).Attraction)/norm((w*particle(i).Velocity + particle(i).Attraction),2);
+            prevVel = particle(i).Velocity;
             particle(i).Velocity = MaxVelocity*normalizedVel;
+            currentVel = particle(i).Velocity;
             
-            % Update Position
-            particle(i).Position=particle(i).Position+particle(i).Velocity;
-
-            % Apply Lower and Upper Bound Limits
-%             particle(i).Position=max(particle(i).Position, VarMin);
-%             particle(i).Position=min(particle(i).Position, VarMax);
+            % Energy, or "Fuel" Evaluation
+            workDone = abs((1/2)*(dot(currentVel,currentVel) - dot(prevVel,prevVel))) % Assumes mass is 1.
+            particle(i).Fuel = particle(i).Fuel - workDone;
             
-            % Evaluation
+            % Update Position if EnoughFuel
+            if particle(i).Fuel > 0
+                particle(i).Position=particle(i).Position+particle(i).Velocity;
+            end
+      
+            % Cost Evaluation
             particle(i).Cost=CostFunction(particle(i).Position,targets,obstacles);
+            
+
                         
             % Update Target Found
             for k = 1:nTarg

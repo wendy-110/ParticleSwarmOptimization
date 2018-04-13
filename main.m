@@ -20,13 +20,14 @@ phi=phi1+phi2;
 chi=2*kappa/abs(2-phi-sqrt(phi^2-4*phi));
 
 params.MaxIt=120;               % Maximum Number of Iterations
-params.nPop=20;                 % Population Size (Swarm Size)
+params.nPop=10;                 % Population Size (Swarm Size)
 params.w=chi*2;                 % Inertia Coefficient
 params.wdamp=1;                 % Damping Ratio of Inertia Weight
 params.c1=chi*phi1;             % Personal Acceleration Coefficient
 params.c2=chi*phi2;             % Social Acceleration Coefficient
 params.particleRadius = 0.2;    % Physical particle radius
-params.ShowIterInfo=false;       % Flag for Showing Iteration Information
+params.ShowIterInfo=false;      % Flag for Showing Iteration Information
+params.particleFuel = 1;      % Starting Potential Energy
 
 params.nTarg = 20;               % Number targets
 params.detectionDist = 0.2*problem.VarMax;     % Target detection distance
