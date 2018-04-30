@@ -49,6 +49,8 @@ function out= PSO(problem, params)
     empty_particle.Fuel = params.particleFuel;
     empty_particle.Attraction = [];
     particle=repmat(empty_particle,nPop,1);
+    sum_initSepDist = 0;
+    sepDistPerIt = zeros(MaxIt,1);
     
     % Targets template
     nTarg = params.nTarg;
@@ -98,9 +100,15 @@ function out= PSO(problem, params)
         if particle(i).Best.Cost < GlobalBest.Cost
             GlobalBest=particle(i).Best;
         end
-
+        
+        % Get Initial Separation Distance from Targets
+        dist = 0;
+        for k = 1:nTarg
+             dist = dist + norm(particle(i).Position-targets(k).Position,2);
+        end
+        sum_initSepDist = sum_initSepDist + dist;
     end
-
+    
     % Array to Hold Best Cost Value on Each Iteration
     BestCosts=inf(MaxIt,1);
     
@@ -131,7 +139,7 @@ for it=1:MaxIt
             particle(i).Attraction = AttractionFunctionGA(aa,ba,ar,br,at,bt,particle(i).Position,particle,targets,obstacles,params);
             normalizedVel = (w*particle(i).Velocity + particle(i).Attraction)/norm((w*particle(i).Velocity + particle(i).Attraction),2);
             prevVel = particle(i).Velocity;
-            particle(i).Velocity = MaxVelocity*normalizedVel;
+            particle(i).Velocity = 0.8*MaxVelocity*normalizedVel;
             currentVel = particle(i).Velocity;
             
             % Energy, or "Fuel" Evaluation
@@ -146,16 +154,19 @@ for it=1:MaxIt
             % Cost Evaluation
             particle(i).Cost=CostFunction(particle(i).Position,targets,obstacles);
             
-
-                        
             % Update Target Found
+            distSum = 0;
             for k = 1:nTarg
                 if norm(particle(i).Position - targets(k).Position,2) < detectionDist
                     targets(k).Found = 1;
                     GlobalBest.Cost=Inf; %Resets simulation
                 end
+                % Get total distance from all Targets
+                distSum = distSum + norm(particle(i).Position-targets(k).Position,2);
             end
-
+            % Store the Total Target Separation Distance
+            sepDistPerIt(it) = sepDistPerIt(it)+distSum;
+            
             % Update Personal Best
             if particle(i).Cost< particle(i).Best.Cost
                 particle(i).Best.Position=particle(i).Position;
@@ -166,10 +177,10 @@ for it=1:MaxIt
                 end
             end
         end
-
+        
         % Store the Best Cost Value
         BestCosts(it)=GlobalBest.Cost;
-
+        
         % Display Iteration Information
         if ShowIterInfo
             disp(['Iteration ' num2str(it) ': Best Cost = ' num2str(BestCosts(it))]);
@@ -183,15 +194,16 @@ for it=1:MaxIt
             yData = [yData; particle(k).Position(2)];
         end
         
-        %Plot the swarm particles + circle of radius particleRadius
+        %Plot the swarm particles
 %         fplot = scatter3(xData,yData,zData,'o','b');
         scatter(xData,yData,'o','b')
         hold on
-        % Plot Detection Radius of Particles
+
+        % Plot ComDistance Radius of Particles
 %         for k = 1:nPop
 %             th = 0:2*pi/20:2*pi;
-%             xunit = params.particleRadius * cos(th) + particle(k).Position(1);
-%             yunit = params.particleRadius * sin(th) + particle(k).Position(2);
+%             xunit = params.comDist * cos(th) + particle(k).Position(1);
+%             yunit = params.comDist * sin(th) + particle(k).Position(2);
 %             plot(xunit, yunit,'b');
 %             hold on
 %         end
@@ -254,23 +266,27 @@ for it=1:MaxIt
         
         % Damping Inertia Coefficient
         w=w*wdamp;
-        
+%         pause
         % If cost == 0, save the iteration num
         if BestCosts(it) == 0
             break;
         end
+        
 end
-    
+
     %play movie
 %     movie(F,1,10)
     
+
     out.endIt = it;
     out.pop=particle;
     out.BestSol=GlobalBest;
     out.BestCosts=BestCosts;
+    out.NormalizedCost = sum(sepDistPerIt) / (it*sum_initSepDist);
     out.F = F; % save video
     
-% v = VideoWriter('PSO_attraction_method.avi','Motion JPEG AVI');
+    
+% v = VideoWriter('PSO_GA.avi','Motion JPEG AVI');
 % v.FrameRate = 10;
 % open(v)
 % writeVideo(v,F)

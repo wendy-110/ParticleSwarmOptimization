@@ -46,8 +46,8 @@ locations(:,1,:) = locations(:,1,:)+stpt(1);
 locations(:,2,:) = locations(:,2,:)+stpt(2);
 
 % Plot all configs
-% for i=1:nConfigs
-%     scatter(locations(:,1,i),locations(:,2,i),'o')
-%     hold on
-% end
-% legend('show')
+for i=1:nConfigs
+    scatter(locations(:,1,i),locations(:,2,i),'o')
+    hold on
+end
+legend('show')

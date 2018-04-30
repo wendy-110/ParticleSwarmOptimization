@@ -1,4 +1,5 @@
-function sumForces = AttractionFunctionGA(aa,ba,ar,br,at,bt,Position,particle,targets,obstacles,params)
+function sumForces = AttractionFunctionGA(aa,ba,ar,br,at,bt,...
+    Position,particle,targets,obstacles,params)
 
 % Initialize total force to zero, get array sizes
 sumForces = 0;
@@ -9,6 +10,7 @@ nPart = size(particle,1);
 % Get info from params
 particleRad = params.particleRadius;
 obstacleRad = params.obsRadius;
+comDist = params.comDist;
 
 %For member-member interaction
 a_attr = aa;
@@ -21,14 +23,18 @@ for i = 1:nPart
     dist = norm(Position-particle(i).Position,2);
     direction = particle(i).Position-Position;
     % If particles too close, repel. Else, attract.
-    if dist ~= 0
+%     if dist ~= 0
+    if dist~=0 && dist < comDist
         if dist > particleRad
             F_mm = F_mm + (a_attr*dist^b_attr)*direction;
         elseif dist < particleRad
             F_mm = F_mm - (a_repul*dist^b_repul)*direction;
         end
+    else
+        F_mm = [0,0];
     end
 end
+
 
 %For member-target interaction
 a_targ = at;
@@ -36,16 +42,35 @@ b_targ = bt;
 F_mt = [0 0];
 lowestDist = Inf;
 lowestDir = [0 0];
-for i = 1:nTarg
-    if targets(i).Found == 0
-        dist = norm(Position-targets(i).Position,2);
-        if dist < lowestDist
-            lowestDist = dist;
-            lowestDir = targets(i).Position-Position;
+% for i = 1:nTarg
+%     if targets(i).Found == 0
+%         dist = norm(Position-targets(i).Position,2);
+%         if dist < lowestDist
+%             lowestDist = dist;
+%             lowestDir = targets(i).Position-Position;
+%         end
+%         F_mt = F_mt+(a_targ*lowestDist^b_targ)*lowestDir;
+%     end
+% end
+if nTarg > 1
+    for i = 1:nTarg
+        if targets(i).Found == 0
+            dist = norm(Position-targets(i).Position,2);
+            if dist < lowestDist
+                lowestDist = dist;
+                lowestDir = targets(i).Position-Position;
+            end
         end
-        F_mt = F_mt+(a_targ*lowestDist^b_targ)*lowestDir;
+    end
+    F_mt = F_mt+(a_targ*lowestDist^b_targ)*lowestDir;
+else
+    for i=1:nTarg
+        if targets().Found == 0
+            F_mt = F_mt+(a_targ*lowestDist^b_targ)*lowestDir;
+        end
     end
 end
+
 
 %For member-obstacle interaction
 a_obs = 30;
@@ -59,7 +84,7 @@ for i = 1:nObs
         F_mo = F_mo-(a_obs*dist^b_obs)*direction;
       end
 end
-% F_mo
+
 
 % Return total cost
 sumForces = F_mm + F_mt + F_mo;
